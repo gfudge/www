@@ -1,0 +1,49 @@
+user www-data
+worker_processes 4;
+pid /run/nginx.pid
+
+events {
+	worker_connections 768;
+}
+
+http {
+	sendfile on;
+	tcp_nopush on;
+	tcp_nodelay on;
+	keepalive_timeout 65;
+	types_hash_max_size 2048;
+	
+	include /etc/nginx/mime.types;
+	default_type application/octet-stream;
+	
+	access_log /var/log/nginx/access.log
+	error_log /var/log/nginx/error.log
+
+	gzip on;
+	gzip_disable "msie6";
+
+	include /etc/nginx/conf.d/*.conf;
+	include /etc/nginx/sites-enabled/*;
+
+	server {
+	    listen 80;
+	    server_name blog;
+	    server_name blog.gregoryfudge.co.uk;
+	    root /var/www/blog;
+	 
+	    location /static/ {
+	        alias /var/www/blog/static/;
+	        expires 30d;
+	        access_log off;
+	    }
+	 
+	    location / {
+	        include uwsgi_params;
+	        uwsgi_pass unix:/var/www/run/blog.sock;
+	    }
+	}
+}
+#server {
+#	listen 3478
+#	server_name gregoryfudge.co.uk;
+#	root /home/ubuntu/stunspoof;
